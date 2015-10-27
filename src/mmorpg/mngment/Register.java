@@ -3,10 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package mmorpg;
+package mmorpg.mngment;
 
 import java.util.Collection;
 import java.util.Date;
+import mmorpg.Helper;
+import mmorpg.Servers;
+import mmorpg.Users;
 
 /**
  *

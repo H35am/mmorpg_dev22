@@ -3,7 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package mmorpg;
+package mmorpg.mngment;
+
+import mmorpg.Helper;
+import mmorpg.Users;
+import mmorpg.mngment.UserMng;
 
 /**
  *
@@ -120,8 +124,13 @@ public class Login extends javax.swing.JFrame {
         String message = helper.Login(txt_userName.getText(),txt_password.getText());
         if("".equals(message))
         {
+            Users user = helper.ReadUsers(txt_userName.getText());
+            UserMng mngPanel = new UserMng();
+            mngPanel.setLoggedInUser(user);
+            mngPanel.UpdateUserValues();
+            
             this.setVisible(false);
-            new UserMng().setVisible(true);
+            mngPanel.setVisible(true);
         }
         else
         {

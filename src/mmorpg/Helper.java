@@ -6,6 +6,8 @@
 package mmorpg;
 
 import java.util.Collection;
+import java.util.Date;
+import java.util.Random;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -21,7 +23,14 @@ public class Helper {
     private EntityManagerFactory emf = null;
     private EntityManager em = null;
     private EntityTransaction tx = null;
+    
+    
     public Helper()
+    {
+        
+    }
+    
+    public void FetchOpenConnection()
     {
         //Server connectie wordt aangemaakt
         emf = Persistence.createEntityManagerFactory("mmorpgPU");
@@ -32,7 +41,7 @@ public class Helper {
     //server entity wordt aangemaakt
     public void CreateServer(Servers server)
     {
-        
+        FetchOpenConnection();
         tx.begin();
         //spoelt alles eerst door
         em.flush();
@@ -46,6 +55,7 @@ public class Helper {
     
     public Servers ReadServer(String address)
     {
+        FetchOpenConnection();
         return em.find(Servers.class, address);
     }
     
@@ -118,6 +128,7 @@ public class Helper {
      
     public Users ReadUsers(String user_name)
     {
+        FetchOpenConnection();
         return em.find(Users.class, user_name);
     }
     
@@ -126,7 +137,7 @@ public class Helper {
     public void CreateCharacter(Characters character, String user_name)
     {
          //server object aangemaakt om te zoeken (in user naar user_name)
-        Users user = em.find(Users.class, user_name);
+        Users user = ReadUsers(user_name);
         //uit server object haalt usercollection en add user daar aan
         user.getCharactersCollection().add(character);
         
@@ -166,8 +177,99 @@ public class Helper {
     }
 
     public Collection<Servers> getAllServers() {
+        FetchOpenConnection();
         Query q = em.createQuery("SELECT e FROM Servers e");
-        return (Collection<Servers>) q.getResultList();
+        Collection<Servers> servers = (Collection<Servers>) q.getResultList();
+        em.close();
+        emf.close();
+        return servers;
+    }
+    public Collection<Users> getAllUsers() {
+        FetchOpenConnection();
+        Query q = em.createQuery("SELECT e FROM Users e");
+        Collection<Users> users = (Collection<Users>) q.getResultList();
+        em.close();
+        emf.close();
+        return users;
+    }
+    
+    public Servers getRandomServer(){
+        Collection<Servers> servers = getAllServers();
+        Random r = new Random();
+        int i = r.nextInt(servers.size());
+        return (Servers)servers.toArray()[i];
+    }
+
+    public void UpdateUserBalance(Users loggedInUser, Integer balanceValue) {
+        FetchOpenConnection();
+        tx.begin();
+        
+        loggedInUser.setBalance(loggedInUser.getBalance() + balanceValue);
+        em.merge(loggedInUser);
+        tx.commit();
+        em.close();
+        emf.close();
+    }
+
+    public void UpdateSubscription(Users loggedInUser, int subscription, int balance) {
+        FetchOpenConnection();
+        tx.begin();
+        
+        loggedInUser.setMonthsPayed(subscription);
+        loggedInUser.setLastPayment(new Date());
+        loggedInUser.setBalance(balance);
+        em.merge(loggedInUser);
+        tx.commit();
+        em.close();
+        emf.close();
+    }
+
+    public void UpdateUserSlots(Users loggedInUser, Integer slotsValue) {
+        FetchOpenConnection();
+        tx.begin();
+        
+        loggedInUser.setCharacterSlots(loggedInUser.getCharacterSlots() + slotsValue);
+        loggedInUser.setBalance(loggedInUser.getBalance() - slotsValue);
+        em.merge(loggedInUser);
+        tx.commit();
+        em.close();
+        emf.close();
+    }
+
+    public void removeCharSlot(Users loggedInUser) {
+        FetchOpenConnection();
+        tx.begin();
+        
+        loggedInUser.setCharacterSlots(loggedInUser.getCharacterSlots() - 1);
+        em.merge(loggedInUser);
+        tx.commit();
+        em.close();
+        emf.close();
+    }
+
+    public Characters ReadCharacter(String name) {
+        FetchOpenConnection();
+        return em.find(Characters.class, name);        
+    }
+
+    public Collection<Characters> getAllCharactersByUsername(String userName) {
+        FetchOpenConnection();
+        
+        //Query q = em.createQuery("SELECT name FROM Characters WHERE user_name = 'heszar' ORDER BY level DESC", Characters.class);
+        Query q = em.createQuery("SELECT e FROM Characters WHERE user_name =:name ORDER BY level DESC",Characters.class);
+        q.setParameter("name", userName);
+    
+        Collection<Characters> characters = (Collection<Characters>) q.getResultList();
+        em.close();
+        emf.close();
+        return characters;
+    }
+
+    public Users getRandomUser() {
+         Collection<Users> users = getAllUsers();
+        Random r = new Random();
+        int i = r.nextInt(users.size());
+        return (Users)users.toArray()[i];
     }
     
     
